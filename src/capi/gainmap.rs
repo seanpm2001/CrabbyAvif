@@ -43,41 +43,25 @@ pub struct avifGainMapMetadata {
     pub useBaseColorSpace: avifBool,
 }
 
-impl From<&GainMapMetadata> for avifGainMapMetadata {
-    fn from(m: &GainMapMetadata) -> Self {
-        avifGainMapMetadata {
-            gainMapMinN: [m.min[0].0, m.min[1].0, m.min[2].0],
-            gainMapMinD: [m.min[0].1, m.min[1].1, m.min[2].1],
-            gainMapMaxN: [m.max[0].0, m.max[1].0, m.max[2].0],
-            gainMapMaxD: [m.max[0].1, m.max[1].1, m.max[2].1],
-            gainMapGammaN: [m.gamma[0].0, m.gamma[1].0, m.gamma[2].0],
-            gainMapGammaD: [m.gamma[0].1, m.gamma[1].1, m.gamma[2].1],
-            baseOffsetN: [m.base_offset[0].0, m.base_offset[1].0, m.base_offset[2].0],
-            baseOffsetD: [m.base_offset[0].1, m.base_offset[1].1, m.base_offset[2].1],
-            alternateOffsetN: [
-                m.alternate_offset[0].0,
-                m.alternate_offset[1].0,
-                m.alternate_offset[2].0,
-            ],
-            alternateOffsetD: [
-                m.alternate_offset[0].1,
-                m.alternate_offset[1].1,
-                m.alternate_offset[2].1,
-            ],
-            baseHdrHeadroomN: m.base_hdr_headroom.0,
-            baseHdrHeadroomD: m.base_hdr_headroom.1,
-            alternateHdrHeadroomN: m.alternate_hdr_headroom.0,
-            alternateHdrHeadroomD: m.alternate_hdr_headroom.1,
-            useBaseColorSpace: m.use_base_color_space as avifBool,
-        }
-    }
-}
-
 #[repr(C)]
 #[derive(Debug)]
 pub struct avifGainMap {
     pub image: *mut avifImage,
-    pub metadata: avifGainMapMetadata,
+    pub gainMapMinN: [i32; 3],
+    pub gainMapMinD: [u32; 3],
+    pub gainMapMaxN: [i32; 3],
+    pub gainMapMaxD: [u32; 3],
+    pub gainMapGammaN: [u32; 3],
+    pub gainMapGammaD: [u32; 3],
+    pub baseOffsetN: [i32; 3],
+    pub baseOffsetD: [u32; 3],
+    pub alternateOffsetN: [i32; 3],
+    pub alternateOffsetD: [u32; 3],
+    pub baseHdrHeadroomN: u32,
+    pub baseHdrHeadroomD: u32,
+    pub alternateHdrHeadroomN: u32,
+    pub alternateHdrHeadroomD: u32,
+    pub useBaseColorSpace: avifBool,
     pub altICC: avifRWData,
     pub altColorPrimaries: ColorPrimaries,
     pub altTransferCharacteristics: TransferCharacteristics,
@@ -92,7 +76,21 @@ impl Default for avifGainMap {
     fn default() -> Self {
         avifGainMap {
             image: std::ptr::null_mut(),
-            metadata: avifGainMapMetadata::default(),
+            gainMapMinN: [1, 1, 1],
+            gainMapMinD: [1, 1, 1],
+            gainMapMaxN: [1, 1, 1],
+            gainMapMaxD: [1, 1, 1],
+            gainMapGammaN: [1, 1, 1],
+            gainMapGammaD: [1, 1, 1],
+            baseOffsetN: [1, 1, 1],
+            baseOffsetD: [64, 64, 64],
+            alternateOffsetN: [1, 1, 1],
+            alternateOffsetD: [64, 64, 64],
+            baseHdrHeadroomN: 0,
+            baseHdrHeadroomD: 1,
+            alternateHdrHeadroomN: 1,
+            alternateHdrHeadroomD: 1,
+            useBaseColorSpace: to_avifBool(false),
             altICC: avifRWData::default(),
             altColorPrimaries: ColorPrimaries::default(),
             altTransferCharacteristics: TransferCharacteristics::default(),
@@ -108,7 +106,61 @@ impl Default for avifGainMap {
 impl From<&GainMap> for avifGainMap {
     fn from(gainmap: &GainMap) -> Self {
         avifGainMap {
-            metadata: (&gainmap.metadata).into(),
+            gainMapMinN: [
+                gainmap.metadata.min[0].0,
+                gainmap.metadata.min[1].0,
+                gainmap.metadata.min[2].0,
+            ],
+            gainMapMinD: [
+                gainmap.metadata.min[0].1,
+                gainmap.metadata.min[1].1,
+                gainmap.metadata.min[2].1,
+            ],
+            gainMapMaxN: [
+                gainmap.metadata.max[0].0,
+                gainmap.metadata.max[1].0,
+                gainmap.metadata.max[2].0,
+            ],
+            gainMapMaxD: [
+                gainmap.metadata.max[0].1,
+                gainmap.metadata.max[1].1,
+                gainmap.metadata.max[2].1,
+            ],
+            gainMapGammaN: [
+                gainmap.metadata.gamma[0].0,
+                gainmap.metadata.gamma[1].0,
+                gainmap.metadata.gamma[2].0,
+            ],
+            gainMapGammaD: [
+                gainmap.metadata.gamma[0].1,
+                gainmap.metadata.gamma[1].1,
+                gainmap.metadata.gamma[2].1,
+            ],
+            baseOffsetN: [
+                gainmap.metadata.base_offset[0].0,
+                gainmap.metadata.base_offset[1].0,
+                gainmap.metadata.base_offset[2].0,
+            ],
+            baseOffsetD: [
+                gainmap.metadata.base_offset[0].1,
+                gainmap.metadata.base_offset[1].1,
+                gainmap.metadata.base_offset[2].1,
+            ],
+            alternateOffsetN: [
+                gainmap.metadata.alternate_offset[0].0,
+                gainmap.metadata.alternate_offset[1].0,
+                gainmap.metadata.alternate_offset[2].0,
+            ],
+            alternateOffsetD: [
+                gainmap.metadata.alternate_offset[0].1,
+                gainmap.metadata.alternate_offset[1].1,
+                gainmap.metadata.alternate_offset[2].1,
+            ],
+            baseHdrHeadroomN: gainmap.metadata.base_hdr_headroom.0,
+            baseHdrHeadroomD: gainmap.metadata.base_hdr_headroom.1,
+            alternateHdrHeadroomN: gainmap.metadata.alternate_hdr_headroom.0,
+            alternateHdrHeadroomD: gainmap.metadata.alternate_hdr_headroom.1,
+            useBaseColorSpace: gainmap.metadata.use_base_color_space as avifBool,
             altICC: (&gainmap.alt_icc).into(),
             altColorPrimaries: gainmap.alt_color_primaries,
             altTransferCharacteristics: gainmap.alt_transfer_characteristics,

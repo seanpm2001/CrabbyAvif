@@ -303,7 +303,8 @@ struct avifImageMirror {
     uint8_t axis;
 };
 
-struct avifGainMapMetadata {
+struct avifGainMap {
+    avifImage *image;
     int32_t gainMapMinN[3];
     uint32_t gainMapMinD[3];
     int32_t gainMapMaxN[3];
@@ -319,11 +320,6 @@ struct avifGainMapMetadata {
     uint32_t alternateHdrHeadroomN;
     uint32_t alternateHdrHeadroomD;
     avifBool useBaseColorSpace;
-};
-
-struct avifGainMap {
-    avifImage *image;
-    avifGainMapMetadata metadata;
     avifRWData altICC;
     avifColorPrimaries altColorPrimaries;
     avifTransferCharacteristics altTransferCharacteristics;
